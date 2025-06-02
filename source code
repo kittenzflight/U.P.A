@@ -1,285 +1,269 @@
 // ==UserScript==
-// @name         Ultimate Petplay Addon beta (fixed)
+// @name         Ultimate Petplay Addon 2
 // @namespace    https://www.bondageprojects.com/
-// @description  Adds petplay roles, pet lists, linking, and HUD with memory and emoji indicators.
-// @author       kittenzflight
+// @description  Adds petplay roles, pet lists, linking, and HUD with memory and emoji indicators, plus role picking UI where Switch can pick Dom or Pet subroles, with toggle button on top-left.
+// @author       kittenzflight (fixed & extended by ChatGPT)
 // @match        https://*.bondageprojects.elementfx.com/R*/*
 // @match        https://*.bondage-europe.com/R*/*
 // @match        https://*.bondageprojects.com/R*/*
 // @grant        none
-// @version      1.7
+// @version      2.2
 // ==/UserScript==
 
 (function () {
   'use strict';
 
   const LOCAL_STORAGE_KEY = 'UPA_Roles';
+  const HUD_COLLAPSED_KEY = 'UPA_HUD_Collapsed';
+
   const MAIN_ROLES = ['Dom', 'Switch', 'Pet'];
-  const DOM_SUBROLES = [' Mistress 👑', ' Soft-dom 🌸', ' Owner 🏡', ' Trainer 🎯'];
-  const PET_TYPES = [' Puppy 🐶', ' Kitty 🐱', ' Bunny 🐰', ' Fox 🦊', ' Pony 🐴'];
+ const DOM_SUBROLES = [
+  'Mistress 👑', 'Soft-dom 🌸', 'Owner 🏡', 'Trainer 🎯',
+  'Domina 🖤', 'Madame 🎩', 'Lady 👑', 'Goddess 🌟', 'Queen 👸', 'Empress 💎', 'Baroness 🏰', 'Countess 🕯️',
+  'Boss Bitch 🔥', 'Supreme ⚡', 'Siren 🎶', 'Alpha 🐺', 'Headmistress 📚', 'She-Who-Must-Be-Obeyed 🗝️',
+  'The Enforcer ⚔️', 'Mistress of Pain 😈', 'Dark Queen 🖤', 'Dungeon Queen 🔒', 'Leather Lady 🧥',
+  'High Priestess 🔮', 'Executioner 🪓', 'Witch Queen 🧙‍♀️', 'Latex Queen 🧪', 'Bondage Mistress 🔗',
+  'Sadistic Siren 🩸', 'Fetish Empress 💅', 'Strap-On Queen 🍆', 'Slavebreaker 🔥', 'Punishment Princess 🎀',
 
-  let upaRoles = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || {};
-  let upaOwners = JSON.parse(localStorage.getItem("UPA_Owners")) || {};
-  let upaPets = JSON.parse(localStorage.getItem("UPA_Pets")) || {};
-  let upaPetRules = JSON.parse(localStorage.getItem("UPA_PetRules")) || {};
-  let upaPetNames = JSON.parse(localStorage.getItem("UPA_PetNames")) || {};
-  let upaRequests = JSON.parse(localStorage.getItem("UPA_Requests")) || {};
+  'Silk Dominatrix 🖤', 'Flogger Empress 🥥', 'Harness Queen 🔗', 'Spankmistress 💥', 'Chainbreaker ⛓️',
+  'Rubber Mistress 🧤', 'Sultry Sadist 🔥', 'Shackles Mistress ⛓️', 'Knot Mistress 🪢', 'Leash Keeper 🐾',
+  'Strapdown Mistress 🎀', 'Punishment Princess 🩸', 'Feather Tease 🪶', 'Veiled Mistress 🎭', 'Sensation Mistress 👁️',
+  'Boot Enforcer 👢', 'Razor Mistress 🔪', 'Dom Control 🎮', 'Temptress Tease 😈', 'Discipline Duchess 🎯'
+];
 
-  function saveOwnership() {
-    localStorage.setItem("UPA_Owners", JSON.stringify(upaOwners));
-    localStorage.setItem("UPA_Pets", JSON.stringify(upaPets));
-  }
 
-  function savePetRules() {
-    localStorage.setItem("UPA_PetRules", JSON.stringify(upaPetRules));
-  }
+ const PET_SUBROLES = [
+  'Puppy 🐶', 'Kitty 🐱', 'Bunny 🐰', 'Fox 🦊', 'Pony 🐴', 'Dragon 🐉',
+  'Wolf 🐺', 'Ferret 🐾', 'Tiger 🐯', 'Otter 🥶', 'Panda 🐼', 'Unicorn 🦩',
+  'Gryphon 🦅', 'Neko 😺', 'Kobold 🐲', 'Slime 🧪', 'Fairy 🙻',
+  'Phoenix 🔥', 'Basilisk  🐍', 'Kelpie 🌊', 'Chimera Cub  🦁', 'Tatzelwurm 🐲',
+  'Jackalope 🦌', 'Peryton  🪽', 'Simurgh  🦚', 'Alkonost  🎶', 'Baku  🐘',
+  'Zouwu  🌈', 'Tanuki  🦝', 'Qilin  🐉', 'Amarok 🌑'
+];
 
-  function savePetNames() {
-    localStorage.setItem("UPA_PetNames", JSON.stringify(upaPetNames));
-  }
+  let upaRoles = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
+  let upaOwners = JSON.parse(localStorage.getItem('UPA_Owners') || '{}');
+  let upaPets = JSON.parse(localStorage.getItem('UPA_Pets') || '{}');
+  let upaRequests = JSON.parse(localStorage.getItem('UPA_Requests') || '{}');
+  let upaPetRules = JSON.parse(localStorage.getItem('UPA_PetRules') || '{}');
+  let upaPetNames = JSON.parse(localStorage.getItem('UPA_PetNames') || '{}');
 
-  function saveRequests() {
-    localStorage.setItem("UPA_Requests", JSON.stringify(upaRequests));
-  }
-
-  function cleanOrphanedOwners() {
-    for (let petId in upaOwners) {
-      if (!Object.values(upaPets).some(arr => arr.includes(petId))) {
-        delete upaOwners[petId];
-      }
-    }
-    saveOwnership();
-  }
-
-  function addPet(ownerId, petId) {
-    if (!upaPets[ownerId]) upaPets[ownerId] = [];
-    if (upaPets[ownerId].includes(petId)) {
-      alert(`Pet #${petId} is already linked to Owner #${ownerId}.`);
-      return;
-    }
-    upaPets[ownerId].push(petId);
-    upaOwners[petId] = ownerId;
-    saveOwnership();
-    delete upaRequests[petId];
-    saveRequests();
-    alert(`Pet #${petId} successfully linked to Owner #${ownerId}.`);
-    updateHUD();
-  }
-
-  function removePetFromOwner(petId) {
-    const ownerId = upaOwners[petId];
-    delete upaOwners[petId];
-    if (upaPets[ownerId]) {
-      upaPets[ownerId] = upaPets[ownerId].filter(p => p !== petId);
-      if (upaPets[ownerId].length === 0) delete upaPets[ownerId];
-    }
-    saveOwnership();
-  }
-
-  const getCurrentMemberNumber = () => Player?.MemberNumber?.toString() || null;
-
-  const setRoleData = (mainRole, subRole) => {
-    const memberNumber = getCurrentMemberNumber();
-    if (!memberNumber) return;
-    upaRoles[memberNumber] = { main: mainRole, sub: subRole };
+  function saveAllData() {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(upaRoles));
-    updateHUD();
-    alert("Role saved!");
-  };
+    localStorage.setItem('UPA_Owners', JSON.stringify(upaOwners));
+    localStorage.setItem('UPA_Pets', JSON.stringify(upaPets));
+    localStorage.setItem('UPA_Requests', JSON.stringify(upaRequests));
+    localStorage.setItem('UPA_PetRules', JSON.stringify(upaPetRules));
+    localStorage.setItem('UPA_PetNames', JSON.stringify(upaPetNames));
+  }
 
-  const resetRoleData = () => {
+  function getCurrentMemberNumber() {
+    if (typeof Player !== 'undefined') {
+      return Player.MemberNumber?.toString();
+    }
+    return null;
+  }
+
+  function resetRoleData() {
     const memberNumber = getCurrentMemberNumber();
-    if (!memberNumber) return;
-    if (!confirm("This will erase your role, ownership, and rules. Pets you've added will stay linked. Continue?")) return;
+    if (!memberNumber) return alert('Player not detected yet.');
+    if (!confirm('Reset your role and unlink ownerships?')) return;
 
     delete upaRoles[memberNumber];
+    delete upaOwners[memberNumber];
     delete upaPetRules[memberNumber];
     delete upaPetNames[memberNumber];
-    delete upaOwners[memberNumber];
+    delete upaRequests[memberNumber];
 
-    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(upaRoles));
-    saveOwnership();
-    savePetRules();
-    savePetNames();
-    cleanOrphanedOwners();
+    for (const owner in upaPets) {
+      upaPets[owner] = upaPets[owner].filter(pet => pet !== memberNumber);
+    }
+
+    saveAllData();
     updateHUD();
-  };
+  }
+
+  function setHUDCollapsed(val) {
+    localStorage.setItem(HUD_COLLAPSED_KEY, val ? 'true' : 'false');
+  }
+
+  function isHUDCollapsed() {
+    return localStorage.getItem(HUD_COLLAPSED_KEY) === 'true';
+  }
+
+  function createToggleButton() {
+    const existingToggle = document.getElementById('upa-toggle-btn');
+    if (existingToggle) existingToggle.remove();
+
+    const toggleBtn = document.createElement('img');
+    toggleBtn.id = 'upa-toggle-btn';
+    toggleBtn.src = 'https://media.discordapp.net/attachments/1263743445638447125/1377502718004035594/R.png?ex=683932e0&is=6837e160&hm=28729dda36680d1e21fa1549db1189bf46c8cbda2f4bcfb7ceb6e9cb934831b5&=&format=webp&quality=lossless';
+    toggleBtn.style.position = 'fixed';
+    toggleBtn.style.top = '10px';
+    toggleBtn.style.left = '10px'; // moved to top-left
+    toggleBtn.style.width = '40px';
+    toggleBtn.style.height = '40px';
+    toggleBtn.style.cursor = 'pointer';
+    toggleBtn.style.zIndex = 10001;
+    toggleBtn.title = isHUDCollapsed() ? 'Expand U.P.A HUD' : 'Collapse U.P.A HUD';
+
+    toggleBtn.onclick = () => {
+      setHUDCollapsed(!isHUDCollapsed());
+      updateHUD();
+      toggleBtn.title = isHUDCollapsed() ? 'Expand U.P.A HUD' : 'Collapse U.P.A HUD';
+    };
+
+    document.body.appendChild(toggleBtn);
+  }
+
+  function createHUD() {
+    const existing = document.getElementById('upa-hud');
+    if (existing) existing.remove();
+
+    if (isHUDCollapsed()) {
+      createToggleButton();
+      return;
+    }
+
+    const container = document.createElement('div');
+    container.id = 'upa-hud';
+    container.style = 'position:fixed;top:60px;left:10px;background:#2c0e12;padding:10px;color:#fefefe;z-index:10000;border-radius:8px;font-size:13px;font-family:Arial;border:1px solid #444;min-width:250px;max-width:320px;max-height:80vh;overflow:auto;';
+
+    const memberNumber = getCurrentMemberNumber();
+    if (!memberNumber) {
+      container.innerHTML = '<em>Waiting for player data...</em>';
+      document.body.appendChild(container);
+      createToggleButton();
+      return;
+    }
+
+    const role = upaRoles[memberNumber];
+    const locked = role && role.locked;
+
+    const title = document.createElement('div');
+    title.innerHTML = '<strong>U.P.A:</strong>';
+    title.style.marginBottom = '6px';
+    container.appendChild(title);
+
+    container.innerHTML += `<div><strong>Your role:</strong> ${role?.main || 'None'}<br><strong>Sub-role:</strong> ${role?.sub || ''}</div>`;
+
+    if (!locked) {
+      const rolePicker = document.createElement('div');
+      rolePicker.style.marginTop = '8px';
+
+      const mainSelect = document.createElement('select');
+      MAIN_ROLES.forEach(r => {
+        const opt = new Option(r, r, false, role?.main === r);
+        mainSelect.add(opt);
+      });
+
+      const subSelect = document.createElement('select');
+      function updateSubRoles() {
+        subSelect.innerHTML = '';
+        let list = mainSelect.value === 'Dom' ? DOM_SUBROLES : mainSelect.value === 'Pet' ? PET_SUBROLES : DOM_SUBROLES.concat(PET_SUBROLES);
+        list.forEach(s => subSelect.add(new Option(s, s, false, role?.sub === s)));
+      }
+      updateSubRoles();
+      mainSelect.onchange = () => updateSubRoles();
+
+      const saveBtn = document.createElement('button');
+      saveBtn.textContent = 'Set Role';
+      saveBtn.style.marginLeft = '6px';
+      saveBtn.onclick = () => {
+        upaRoles[memberNumber] = {
+          main: mainSelect.value,
+          sub: subSelect.value,
+          locked: true
+        };
+        saveAllData();
+        updateHUD();
+      };
+
+      rolePicker.append('Main Role: ', mainSelect, ' Sub-role: ', subSelect, ' ', saveBtn);
+      container.appendChild(rolePicker);
+    }
+
+    const pets = upaPets[memberNumber] || [];
+    const owner = upaOwners[memberNumber];
+
+    if (pets.length > 0) pets.forEach(id => container.innerHTML += `<div>Linked Pet: #${id}</div>`);
+    if (owner) container.innerHTML += `<div>Owned by: #${owner}</div>`;
+
+    const pending = Object.entries(upaRequests).filter(([k, v]) => v === memberNumber);
+    if (pending.length > 0) {
+      container.innerHTML += '<div><strong>Pending Ownership Requests:</strong></div>';
+      pending.forEach(([id]) => {
+        const row = document.createElement('div');
+        row.style.marginTop = '4px';
+        row.innerHTML = `From #${id}`;
+
+        const accept = document.createElement('button');
+        accept.textContent = 'Accept';
+        accept.style.marginLeft = '6px';
+        accept.onclick = () => {
+          upaOwners[memberNumber] = id;
+          if (!upaPets[id]) upaPets[id] = [];
+          if (!upaPets[id].includes(memberNumber)) upaPets[id].push(memberNumber);
+          delete upaRequests[id];
+          saveAllData();
+          updateHUD();
+        };
+
+        const decline = document.createElement('button');
+        decline.textContent = 'Decline';
+        decline.style.marginLeft = '6px';
+        decline.onclick = () => {
+          delete upaRequests[id];
+          saveAllData();
+          updateHUD();
+        };
+
+        row.append(' ', accept, decline);
+        container.appendChild(row);
+      });
+    }
+
+    const btnRow = document.createElement('div');
+    btnRow.style.marginTop = '8px';
+
+    const linkBtn = document.createElement('button');
+    linkBtn.textContent = 'Link Pet';
+    linkBtn.onclick = () => {
+      const target = prompt('Enter member ID to request as your pet:');
+      if (target && target !== memberNumber) {
+        upaRequests[memberNumber] = target;
+        saveAllData();
+        alert(`Request sent to #${target}`);
+      }
+    };
+
+    const resetBtn = document.createElement('button');
+    resetBtn.textContent = 'Reset Role';
+    resetBtn.style.marginLeft = '6px';
+    resetBtn.onclick = resetRoleData;
+
+    btnRow.append(linkBtn, resetBtn);
+    container.appendChild(btnRow);
+
+    document.body.appendChild(container);
+
+    createToggleButton();
+  }
 
   function updateHUD() {
     createHUD();
   }
 
-  const createHUD = () => {
-    const existingHUD = document.querySelector('#upa-hud');
-    if (existingHUD) existingHUD.remove();
-
-    const hud = document.createElement('div');
-    hud.id = 'upa-hud';
-    hud.style.position = 'fixed';
-    hud.style.top = '0';
-    hud.style.left = '0';
-    hud.style.backgroundColor = '#2d0d14';
-    hud.style.color = '#fff';
-    hud.style.padding = '5px 10px';
-    hud.style.borderRadius = '0 0 10px 0';
-    hud.style.zIndex = '1000';
-    hud.style.fontFamily = 'Arial, sans-serif';
-    hud.style.fontSize = '14px';
-    hud.style.border = '1px solid #550d1a';
-    hud.style.boxShadow = '0 0 8px rgba(0, 0, 0, 0.5)';
-    hud.style.minWidth = 'auto';
-
-    const toggleBtn = document.createElement('button');
-    toggleBtn.textContent = 'Expand';
-    toggleBtn.style.float = 'right';
-    toggleBtn.style.marginLeft = '10px';
-    toggleBtn.onclick = () => {
-      isCollapsed = !isCollapsed;
-      content.style.display = isCollapsed ? 'none' : 'block';
-      toggleBtn.textContent = isCollapsed ? 'Expand' : 'Collapse';
-    };
-    hud.appendChild(toggleBtn);
-
-    let isCollapsed = true;
-    const content = document.createElement('div');
-    content.style.display = 'none';
-    content.style.maxHeight = '60vh';
-    content.style.overflowY = 'auto';
-    hud.appendChild(content);
-
-    const memberNumber = getCurrentMemberNumber();
-    if (!memberNumber) return;
-
-    const roleData = upaRoles[memberNumber] || {};
-    let mainRole = roleData.main || 'None';
-    let subRole = roleData.sub || 'None';
-
-    const makeLine = (label, value) => {
-      const line = document.createElement('div');
-      line.style.marginBottom = '8px';
-      line.innerHTML = `<strong>${label}:</strong> ${value}`;
-      return line;
-    };
-
-    const title = document.createElement('h4');
-    title.textContent = 'Ultimate Petplay Addon';
-    content.appendChild(title);
-
-    if (mainRole === 'None') {
-      const mainRoleLabel = document.createElement('label');
-      mainRoleLabel.textContent = 'Choose Main Role:';
-      content.appendChild(mainRoleLabel);
-
-      const mainRoleSelect = document.createElement('select');
-      MAIN_ROLES.forEach(roleOption => {
-        const option = document.createElement('option');
-        option.value = roleOption;
-        option.textContent = roleOption;
-        mainRoleSelect.appendChild(option);
-      });
-      content.appendChild(mainRoleSelect);
-
-      const subRoleLabel = document.createElement('label');
-      subRoleLabel.textContent = 'Choose Sub-role:';
-      content.appendChild(subRoleLabel);
-
-      const subRoleSelect = document.createElement('select');
-      content.appendChild(subRoleSelect);
-
-      function updateSubRoleOptions(selectedMain) {
-        subRoleSelect.innerHTML = '';
-        let options = [];
-        if (selectedMain === 'Dom') options = DOM_SUBROLES;
-        else if (selectedMain === 'Pet') options = PET_TYPES;
-        else options = DOM_SUBROLES.concat(PET_TYPES);
-
-        options.forEach(opt => {
-          const option = document.createElement('option');
-          option.value = opt;
-          option.textContent = opt;
-          subRoleSelect.appendChild(option);
-        });
-      }
-
-      updateSubRoleOptions(mainRoleSelect.value);
-      mainRoleSelect.onchange = () => updateSubRoleOptions(mainRoleSelect.value);
-
-      const saveBtn = document.createElement('button');
-      saveBtn.textContent = 'Save Role';
-      saveBtn.onclick = () => setRoleData(mainRoleSelect.value, subRoleSelect.value);
-      content.appendChild(saveBtn);
+  let attempts = 0;
+  const maxAttempts = 20;
+  const interval = setInterval(() => {
+    if (getCurrentMemberNumber()) {
+      clearInterval(interval);
+      updateHUD();
     } else {
-      content.appendChild(makeLine('Your role', mainRole));
-      content.appendChild(makeLine('Sub-role', subRole));
+      attempts++;
+      if (attempts >= maxAttempts) clearInterval(interval);
     }
+  }, 1000);
 
-    if (mainRole === 'Pet' && upaRequests[memberNumber]) {
-      const requestorId = upaRequests[memberNumber];
-      const reqDiv = document.createElement('div');
-      reqDiv.innerHTML = `<strong>Owner request from:</strong> #${requestorId}`;
-
-      const yesBtn = document.createElement('button');
-      yesBtn.textContent = 'Yes';
-      yesBtn.onclick = () => addPet(requestorId, memberNumber);
-
-      const noBtn = document.createElement('button');
-      noBtn.textContent = 'No';
-      noBtn.onclick = () => { delete upaRequests[memberNumber]; saveRequests(); updateHUD(); };
-
-      content.appendChild(reqDiv);
-      content.appendChild(yesBtn);
-      content.appendChild(noBtn);
-    }
-
-    if (['Dom', 'Pet', 'Switch'].includes(mainRole)) {
-      const requestInput = document.createElement('input');
-      requestInput.type = 'number';
-      requestInput.placeholder = 'Pet ID to request';
-      requestInput.style.width = '80px';
-
-      const requestBtn = document.createElement('button');
-      requestBtn.textContent = 'Request Pet';
-      requestBtn.onclick = () => {
-        const petId = requestInput.value;
-        if (petId && upaRequests[petId] !== memberNumber) {
-          upaRequests[petId] = memberNumber;
-          saveRequests();
-          alert('Request sent to pet #' + petId);
-        } else {
-          alert('Request already sent or invalid.');
-        }
-      };
-      content.appendChild(requestInput);
-      content.appendChild(requestBtn);
-    }
-
-    if (upaOwners[memberNumber]) {
-      const removeBtn = document.createElement('button');
-      removeBtn.textContent = 'Remove Owner';
-      removeBtn.onclick = () => {
-        removePetFromOwner(memberNumber);
-        updateHUD();
-      };
-      content.appendChild(removeBtn);
-    }
-
-    const resetBtn = document.createElement('button');
-    resetBtn.textContent = 'Reset Role';
-    resetBtn.onclick = resetRoleData;
-    content.appendChild(resetBtn);
-
-    document.body.appendChild(hud);
-  };
-
-  let loadAttempts = 0;
-  const waitForPlayer = setInterval(() => {
-    loadAttempts++;
-    if (typeof Player !== 'undefined' && Player.MemberNumber) {
-      clearInterval(waitForPlayer);
-      createHUD();
-    } else if (loadAttempts > 60) {
-      clearInterval(waitForPlayer);
-      console.warn("UPA: Player data not available after 30 seconds.");
-    }
-  }, 500);
 })();
