@@ -2,7 +2,7 @@
 // @name         Ultimate Petplay Addon 2
 // @namespace    https://www.bondageprojects.com/
 // @description  Adds petplay roles, pet lists, linking, and HUD with memory and emoji indicators, plus role picking UI where Switch can pick Dom or Pet subroles, with toggle button on top-left.
-// @author       kittenzflight (fixed & extended by ChatGPT)
+// @author       kittenzflight
 // @match        https://*.bondageprojects.elementfx.com/R*/*
 // @match        https://*.bondage-europe.com/R*/*
 // @match        https://*.bondageprojects.com/R*/*
