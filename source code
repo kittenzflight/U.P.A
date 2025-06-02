@@ -19,29 +19,27 @@
   const HUD_COLLAPSED_KEY = 'UPA_HUD_Collapsed';
 
   const MAIN_ROLES = ['Dom', 'Switch', 'Pet'];
- const DOM_SUBROLES = [
-  'Mistress 👑', 'Soft-dom 🌸', 'Owner 🏡', 'Trainer 🎯',
-  'Domina 🖤', 'Madame 🎩', 'Lady 👑', 'Goddess 🌟', 'Queen 👸', 'Empress 💎', 'Baroness 🏰', 'Countess 🕯️',
-  'Boss Bitch 🔥', 'Supreme ⚡', 'Siren 🎶', 'Alpha 🐺', 'Headmistress 📚', 'She-Who-Must-Be-Obeyed 🗝️',
-  'The Enforcer ⚔️', 'Mistress of Pain 😈', 'Dark Queen 🖤', 'Dungeon Queen 🔒', 'Leather Lady 🧥',
-  'High Priestess 🔮', 'Executioner 🪓', 'Witch Queen 🧙‍♀️', 'Latex Queen 🧪', 'Bondage Mistress 🔗',
-  'Sadistic Siren 🩸', 'Fetish Empress 💅', 'Strap-On Queen 🍆', 'Slavebreaker 🔥', 'Punishment Princess 🎀',
+  const DOM_SUBROLES = [
+    'Mistress 👑', 'Soft-dom 🌸', 'Owner 🏡', 'Trainer 🎯',
+    'Domina 🖤', 'Madame 🎩', 'Lady 👑', 'Goddess 🌟', 'Queen 👸', 'Empress 💎', 'Baroness 🏰', 'Countess 🕯️',
+    'Boss Bitch 🔥', 'Supreme ⚡', 'Siren 🎶', 'Alpha 🐺', 'Headmistress 📚', 'She-Who-Must-Be-Obeyed 🗝️',
+    'The Enforcer ⚔️', 'Mistress of Pain 😈', 'Dark Queen 🖤', 'Dungeon Queen 🔒', 'Leather Lady 🧥',
+    'High Priestess 🔮', 'Executioner 🪓', 'Witch Queen 🧙‍♀️', 'Latex Queen 🧪', 'Bondage Mistress 🔗',
+    'Sadistic Siren 🩸', 'Fetish Empress 💅', 'Strap-On Queen 🍆', 'Slavebreaker 🔥', 'Punishment Princess 🎀',
+    'Silk Dominatrix 🖤', 'Flogger Empress 🥥', 'Harness Queen 🔗', 'Spankmistress 💥', 'Chainbreaker ⛓️',
+    'Rubber Mistress 🧤', 'Sultry Sadist 🔥', 'Shackles Mistress ⛓️', 'Knot Mistress 🪢', 'Leash Keeper 🐾',
+    'Strapdown Mistress 🎀', 'Punishment Princess 🩸', 'Feather Tease 🪶', 'Veiled Mistress 🎭', 'Sensation Mistress 👁️',
+    'Boot Enforcer 👢', 'Razor Mistress 🔪', 'Dom Control 🎮', 'Temptress Tease 😈', 'Discipline Duchess 🎯'
+  ];
 
-  'Silk Dominatrix 🖤', 'Flogger Empress 🥥', 'Harness Queen 🔗', 'Spankmistress 💥', 'Chainbreaker ⛓️',
-  'Rubber Mistress 🧤', 'Sultry Sadist 🔥', 'Shackles Mistress ⛓️', 'Knot Mistress 🪢', 'Leash Keeper 🐾',
-  'Strapdown Mistress 🎀', 'Punishment Princess 🩸', 'Feather Tease 🪶', 'Veiled Mistress 🎭', 'Sensation Mistress 👁️',
-  'Boot Enforcer 👢', 'Razor Mistress 🔪', 'Dom Control 🎮', 'Temptress Tease 😈', 'Discipline Duchess 🎯'
-];
-
-
- const PET_SUBROLES = [
-  'Puppy 🐶', 'Kitty 🐱', 'Bunny 🐰', 'Fox 🦊', 'Pony 🐴', 'Dragon 🐉',
-  'Wolf 🐺', 'Ferret 🐾', 'Tiger 🐯', 'Otter 🥶', 'Panda 🐼', 'Unicorn 🦩',
-  'Gryphon 🦅', 'Neko 😺', 'Kobold 🐲', 'Slime 🧪', 'Fairy 🙻',
-  'Phoenix 🔥', 'Basilisk  🐍', 'Kelpie 🌊', 'Chimera Cub  🦁', 'Tatzelwurm 🐲',
-  'Jackalope 🦌', 'Peryton  🪽', 'Simurgh  🦚', 'Alkonost  🎶', 'Baku  🐘',
-  'Zouwu  🌈', 'Tanuki  🦝', 'Qilin  🐉', 'Amarok 🌑'
-];
+  const PET_SUBROLES = [
+    'Puppy 🐶', 'Kitty 🐱', 'Bunny 🐰', 'Fox 🦊', 'Pony 🐴', 'Dragon 🐉',
+    'Wolf 🐺', 'Ferret 🐾', 'Tiger 🐯', 'Otter 🥶', 'Panda 🐼', 'Unicorn 🦩',
+    'Gryphon 🦅', 'Neko 😺', 'Kobold 🐲', 'Slime 🧪', 'Fairy 🙻',
+    'Phoenix 🔥', 'Basilisk  🐍', 'Kelpie 🌊', 'Chimera Cub  🦁', 'Tatzelwurm 🐲',
+    'Jackalope 🦌', 'Peryton  🪽', 'Simurgh  🦚', 'Alkonost  🎶', 'Baku  🐘',
+    'Zouwu  🌈', 'Tanuki  🦝', 'Qilin  🐉', 'Amarok 🌑'
+  ];
 
   let upaRoles = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY) || '{}');
   let upaOwners = JSON.parse(localStorage.getItem('UPA_Owners') || '{}');
@@ -102,7 +100,7 @@
     toggleBtn.src = 'https://media.discordapp.net/attachments/1263743445638447125/1377502718004035594/R.png?ex=683932e0&is=6837e160&hm=28729dda36680d1e21fa1549db1189bf46c8cbda2f4bcfb7ceb6e9cb934831b5&=&format=webp&quality=lossless';
     toggleBtn.style.position = 'fixed';
     toggleBtn.style.top = '10px';
-    toggleBtn.style.left = '10px'; // moved to top-left
+    toggleBtn.style.left = '10px'; // top-left corner
     toggleBtn.style.width = '40px';
     toggleBtn.style.height = '40px';
     toggleBtn.style.cursor = 'pointer';
